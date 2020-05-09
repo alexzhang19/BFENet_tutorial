@@ -1,2 +1,3 @@
 # BFENet_tutorial
-batch-dropblock-network.
+源码地址：https://github.com/daizuozhuo/batch-feature-erasing-network
+
