@@ -7,12 +7,13 @@ import matplotlib.pyplot as plt
 
 from trainers.re_ranking import re_ranking as re_ranking_func
 
+
 class ResNetEvaluator:
     def __init__(self, model):
         self.model = model
 
-    def save_incorrect_pairs(self, distmat, queryloader, galleryloader, 
-        g_pids, q_pids, g_camids, q_camids, savefig):
+    def save_incorrect_pairs(self, distmat, queryloader, galleryloader,
+                             g_pids, q_pids, g_camids, q_camids, savefig):
         os.makedirs(savefig, exist_ok=True)
         self.model.eval()
         m = distmat.shape[0]
@@ -26,7 +27,7 @@ class ResNetEvaluator:
                     break
             if g_pids[index] == q_pids[i]:
                 continue
-            fig, axes =plt.subplots(1, 11, figsize=(12, 8))
+            fig, axes = plt.subplots(1, 11, figsize=(12, 8))
             img = queryloader.dataset.dataset[i][0]
             img = Image.open(img).convert('RGB')
             axes[0].set_title(q_pids[i])
@@ -36,14 +37,14 @@ class ResNetEvaluator:
                 gallery_index = indices[i][j]
                 img = galleryloader.dataset.dataset[gallery_index][0]
                 img = Image.open(img).convert('RGB')
-                axes[j+1].set_title(g_pids[gallery_index])
-                axes[j+1].set_axis_off()
-                axes[j+1].imshow(img)
-            fig.savefig(os.path.join(savefig, '%d.png' %q_pids[i]))
+                axes[j + 1].set_title(g_pids[gallery_index])
+                axes[j + 1].set_axis_off()
+                axes[j + 1].imshow(img)
+            fig.savefig(os.path.join(savefig, '%d.png' % q_pids[i]))
             plt.close(fig)
 
-    def evaluate(self, queryloader, galleryloader, queryFliploader, galleryFliploader, 
-        ranks=[1, 2, 4, 5,8, 10, 16, 20], eval_flip=False, re_ranking=False, savefig=False):
+    def evaluate(self, queryloader, galleryloader, queryFliploader, galleryFliploader,
+                 ranks=[1, 2, 4, 5, 8, 10, 16, 20], eval_flip=False, re_ranking=False, savefig=False):
         self.model.eval()
         qf, q_pids, q_camids = [], [], []
         for inputs0, inputs1 in zip(queryloader, queryFliploader):
@@ -74,7 +75,7 @@ class ResNetEvaluator:
                 gf.append((feature0 + feature1) / 2.0)
             else:
                 gf.append(feature0)
-                
+
             g_pids.extend(pids)
             g_camids.extend(camids)
         gf = torch.cat(gf, 0)
@@ -87,16 +88,16 @@ class ResNetEvaluator:
 
         m, n = qf.size(0), gf.size(0)
         q_g_dist = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, n) + \
-            torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
+                   torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
         q_g_dist.addmm_(1, -2, qf, gf.t())
 
         if re_ranking:
             q_q_dist = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, m) + \
-                torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, m).t()
+                       torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, m).t()
             q_q_dist.addmm_(1, -2, qf, qf.t())
 
             g_g_dist = torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, n) + \
-                torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, n).t()
+                       torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, n).t()
             g_g_dist.addmm_(1, -2, gf, gf.t())
 
             q_g_dist = q_g_dist.numpy()
@@ -113,12 +114,12 @@ class ResNetEvaluator:
 
             distmat = torch.Tensor(re_ranking_func(q_g_dist, q_q_dist, g_g_dist))
         else:
-            distmat = q_g_dist 
+            distmat = q_g_dist
 
         if savefig:
             print("Saving fingure")
-            self.save_incorrect_pairs(distmat.numpy(), queryloader, galleryloader, 
-                g_pids.numpy(), q_pids.numpy(), g_camids.numpy(), q_camids.numpy(), savefig)
+            self.save_incorrect_pairs(distmat.numpy(), queryloader, galleryloader,
+                                      g_pids.numpy(), q_pids.numpy(), g_camids.numpy(), q_camids.numpy(), savefig)
 
         print("Computing CMC and mAP")
         cmc, mAP = self.eval_func_gpu(distmat, q_pids, g_pids, q_camids, g_camids)
@@ -147,9 +148,9 @@ class ResNetEvaluator:
             max_rank = num_g
             print("Note: number of gallery samples is quite small, got {}".format(num_g))
         _, indices = torch.sort(distmat, dim=1)
-        matches = g_pids[indices] == q_pids.view([num_q, -1]) 
-        keep = ~((g_pids[indices] == q_pids.view([num_q, -1])) & (g_camids[indices]  == q_camids.view([num_q, -1])))
-        #keep = g_camids[indices]  != q_camids.view([num_q, -1])
+        matches = g_pids[indices] == q_pids.view([num_q, -1])
+        keep = ~((g_pids[indices] == q_pids.view([num_q, -1])) & (g_camids[indices] == q_camids.view([num_q, -1])))
+        # keep = g_camids[indices]  != q_camids.view([num_q, -1])
 
         results = []
         num_rel = []
@@ -165,7 +166,7 @@ class ResNetEvaluator:
         cmc[cmc > 1] = 1
         all_cmc = cmc.sum(dim=0) / cmc.size(0)
 
-        pos = torch.Tensor(range(1, max_rank+1))
+        pos = torch.Tensor(range(1, max_rank + 1))
         temp_cmc = matches.cumsum(dim=1) / pos * matches
         AP = temp_cmc.sum(dim=1) / num_rel
         mAP = AP.sum() / AP.size(0)

@@ -13,11 +13,13 @@ def similarity(inputs_):
     sim = torch.matmul(inputs_, inputs_.t())
     return sim
 
-def pdist(A, squared = False, eps = 1e-4):
+
+def pdist(A, squared=False, eps=1e-4):
     prod = torch.mm(A, A.t())
     norm = prod.diag().unsqueeze(1).expand_as(prod)
-    res = (norm + norm.t() - 2 * prod).clamp(min = 0)
-    return res if squared else res.clamp(min = eps).sqrt()
+    res = (norm + norm.t() - 2 * prod).clamp(min=0)
+    return res if squared else res.clamp(min=eps).sqrt()
+
 
 class LiftedStructureLoss(nn.Module):
     def __init__(self, alpha=10, beta=2, margin=0.5, hard_mining=None, **kwargs):
@@ -57,10 +59,11 @@ class LiftedStructureLoss(nn.Module):
         '''
         margin = 1.0
         eps = 1e-4
-        d = pdist(embeddings, squared = False, eps = eps)
+        d = pdist(embeddings, squared=False, eps=eps)
         pos = torch.eq(*[labels.unsqueeze(dim).expand_as(d) for dim in [0, 1]]).type_as(d)
         neg_i = torch.mul((margin - d).exp(), 1 - pos).sum(1).expand_as(d)
         return torch.sum(F.relu(pos.triu(1) * ((neg_i + neg_i.t()).log() + d)).pow(2)) / (pos.sum() - len(d)), 0
+
 
 def main():
     data_size = 32
@@ -72,7 +75,7 @@ def main():
     # print(x)
     w = Variable(torch.rand(input_dim, output_dim), requires_grad=True)
     inputs = x.mm(w)
-    y_ = 8*list(range(num_class))
+    y_ = 8 * list(range(num_class))
     targets = Variable(torch.IntTensor(y_))
 
     print(LiftedStructureLoss()(inputs, targets))
@@ -81,5 +84,3 @@ def main():
 if __name__ == '__main__':
     main()
     print('Congratulations to you!')
-
-

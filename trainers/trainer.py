@@ -14,7 +14,7 @@ class cls_tripletTrainer:
     def __init__(self, opt, model, optimzier, criterion, summary_writer):
         self.opt = opt
         self.model = model
-        self.optimizer= optimzier
+        self.optimizer = optimzier
         self.criterion = criterion
         self.summary_writer = summary_writer
 
@@ -65,9 +65,9 @@ class cls_tripletTrainer:
         imgs, pids, _ = inputs
         if self.opt.random_crop and random.random() > 0.3:
             h, w = imgs.size()[-2:]
-            start = int((h-2*w)*random.random())
+            start = int((h - 2 * w) * random.random())
             mask = imgs.new_zeros(imgs.size())
-            mask[:, :, start:start+2*w, :] = 1
+            mask[:, :, start:start + 2 * w, :] = 1
             imgs = imgs * mask
         '''
         if random.random() > 0.5:

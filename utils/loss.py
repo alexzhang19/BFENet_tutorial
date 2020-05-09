@@ -4,15 +4,17 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-def topk_mask(input, dim, K = 10, **kwargs):
-    index = input.topk(max(1, min(K, input.size(dim))), dim = dim, **kwargs)[1]
+
+def topk_mask(input, dim, K=10, **kwargs):
+    index = input.topk(max(1, min(K, input.size(dim))), dim=dim, **kwargs)[1]
     return torch.autograd.Variable(torch.zeros_like(input.data)).scatter(dim, index, 1.0)
 
-def pdist(A, squared = False, eps = 1e-4):
+
+def pdist(A, squared=False, eps=1e-4):
     prod = torch.mm(A, A.t())
     norm = prod.diag().unsqueeze(1).expand_as(prod)
-    res = (norm + norm.t() - 2 * prod).clamp(min = 0)
-    return res if squared else res.clamp(min = eps).sqrt()
+    res = (norm + norm.t() - 2 * prod).clamp(min=0)
+    return res if squared else res.clamp(min=eps).sqrt()
 
 
 def normalize(x, axis=-1):
@@ -60,7 +62,7 @@ def hard_example_mining(dist_mat, labels, margin, return_inds=False):
       thus we can cope with all anchors in parallel.
     """
 
-    torch.set_printoptions(threshold=5000) 
+    torch.set_printoptions(threshold=5000)
     assert len(dist_mat.size()) == 2
     assert dist_mat.size(0) == dist_mat.size(1)
     N = dist_mat.size(0)
@@ -153,6 +155,7 @@ class CrossEntropyLabelSmooth(nn.Module):
         loss = (- targets * log_probs).mean(0).sum()
         return loss
 
+
 class Margin:
     def __call__(self, embeddings, labels):
         embeddings = F.normalize(embeddings)
@@ -163,7 +166,8 @@ class Margin:
         eps = 1e-6
         distance_weighted_sampling = True
         d = pdist(embeddings)
-        pos = torch.eq(*[labels.unsqueeze(dim).expand_as(d) for dim in [0, 1]]).type_as(d) - torch.autograd.Variable(torch.eye(len(d))).type_as(d)
+        pos = torch.eq(*[labels.unsqueeze(dim).expand_as(d) for dim in [0, 1]]).type_as(d) - torch.autograd.Variable(
+            torch.eye(len(d))).type_as(d)
         num_neg = int(pos.data.sum() / len(pos))
         if distance_weighted_sampling:
             '''
@@ -174,10 +178,13 @@ class Margin:
             samples = torch.multinomial(weights, replacement = False, num_samples = num_neg)
             neg = torch.autograd.Variable(torch.zeros_like(pos.data).scatter_(1, samples, 1))
             '''
-            neg = torch.autograd.Variable(torch.zeros_like(pos.data).scatter_(1, torch.multinomial((d.data.clamp(min = distance_threshold).pow(embeddings.size(-1) - 2) * (1 - d.data.clamp(min = distance_threshold).pow(2) / 4).pow(0.5 * (embeddings.size(-1) - 3))).reciprocal().masked_fill_(pos.data + torch.eye(len(d)).type_as(d.data) > 0, eps), replacement = False, num_samples = num_neg), 1))
+            neg = torch.autograd.Variable(torch.zeros_like(pos.data).scatter_(1, torch.multinomial((d.data.clamp(
+                min=distance_threshold).pow(embeddings.size(-1) - 2) * (1 - d.data.clamp(min=distance_threshold).pow(
+                2) / 4).pow(0.5 * (embeddings.size(-1) - 3))).reciprocal().masked_fill_(
+                pos.data + torch.eye(len(d)).type_as(d.data) > 0, eps), replacement=False, num_samples=num_neg), 1))
         else:
-            neg = topk_mask(d  + inf * ((pos > 0) + (d < distance_threshold)).type_as(d), dim = 1, largest = False, K = num_neg)
+            neg = topk_mask(d + inf * ((pos > 0) + (d < distance_threshold)).type_as(d), dim=1, largest=False,
+                            K=num_neg)
         L = F.relu(alpha + (pos * 2 - 1) * (d - beta))
         M = ((pos + neg > 0) * (L > 0)).float()
         return (M * L).sum() / M.sum(), 0
-

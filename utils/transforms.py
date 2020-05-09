@@ -42,12 +42,14 @@ class Random2DTranslation(object):
             (x1, y1, x1 + self.width, y1 + self.height))
         return croped_img
 
+
 def pad_shorter(x):
-    h,w = x.size[-2:]
-    s = max(h, w) 
+    h, w = x.size[-2:]
+    s = max(h, w)
     new_im = Image.new("RGB", (s, s))
-    new_im.paste(x, ((s-h)//2, (s-w)//2))
+    new_im.paste(x, ((s - h) // 2, (s - w) // 2))
     return new_im
+
 
 class TrainTransform(object):
     def __init__(self, data):
@@ -79,9 +81,9 @@ class TrainTransform(object):
         x = T.ToTensor()(x)
         x = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])(x)
         if self.data == 'person':
-            x = Cutout(probability = 0.5, size=64, mean=[0.0, 0.0, 0.0])(x)
+            x = Cutout(probability=0.5, size=64, mean=[0.0, 0.0, 0.0])(x)
         else:
-            x = RandomErasing(probability = 0.5, mean=[0.0, 0.0, 0.0])(x)
+            x = RandomErasing(probability=0.5, mean=[0.0, 0.0, 0.0])(x)
         return x
 
 
@@ -95,7 +97,7 @@ class TestTransform(object):
             x = pad_shorter(x)
             x = T.Resize((256, 256))(x)
         elif self.data == 'car':
-            #x = pad_shorter(x)
+            # x = pad_shorter(x)
             x = T.Resize((256, 256))(x)
         elif self.data == 'clothes':
             x = pad_shorter(x)

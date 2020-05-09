@@ -44,6 +44,7 @@ class Bottleneck(nn.Module):
 
         return out
 
+
 class CBAM_Module(nn.Module):
 
     def __init__(self, channels, reduction):
@@ -56,11 +57,11 @@ class CBAM_Module(nn.Module):
         self.fc2 = nn.Conv2d(channels // reduction, channels, kernel_size=1,
                              padding=0)
         self.sigmoid_channel = nn.Sigmoid()
-        self.conv_after_concat = nn.Conv2d(2, 1, kernel_size = 3, stride=1, padding = 1)
+        self.conv_after_concat = nn.Conv2d(2, 1, kernel_size=3, stride=1, padding=1)
         self.sigmoid_spatial = nn.Sigmoid()
 
     def forward(self, x):
-        #channel attention
+        # channel attention
         module_input = x
         avg = self.avg_pool(x)
         mx = self.max_pool(x)
@@ -73,8 +74,8 @@ class CBAM_Module(nn.Module):
         x = avg + mx
         x = self.sigmoid_channel(x)
         x = module_input * x
-        #spatial attention
-        module_input = x 
+        # spatial attention
+        module_input = x
         avg = torch.mean(x, 1, True)
         mx, _ = torch.max(x, 1, True)
         x = torch.cat((avg, mx), 1)
@@ -82,6 +83,7 @@ class CBAM_Module(nn.Module):
         x = self.sigmoid_spatial(x)
         x = module_input * x
         return x
+
 
 class CBAMBottleneck(nn.Module):
     expansion = 4
@@ -121,6 +123,7 @@ class CBAMBottleneck(nn.Module):
         out = self.relu(out)
 
         return out
+
 
 def cbam_resnet50():
     return ResNet(last_stride=1, block=CBAMBottleneck)

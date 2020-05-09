@@ -17,6 +17,7 @@ def read_image(img_path):
             pass
     return img
 
+
 class ImageData(Dataset):
     def __init__(self, dataset, transform):
         self.dataset = dataset

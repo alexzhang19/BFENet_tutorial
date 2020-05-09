@@ -96,12 +96,12 @@ def train(**kwargs):
         model = IDE(dataset.num_train_pids)
     elif opt.model_name == 'resnet':
         model = Resnet(dataset.num_train_pids)
- 
+
     optim_policy = model.get_optim_policy()
 
     if opt.pretrained_model:
         state_dict = torch.load(opt.pretrained_model)['state_dict']
-        #state_dict = {k: v for k, v in state_dict.items() \
+        # state_dict = {k: v for k, v in state_dict.items() \
         #        if not ('reduction' in k or 'softmax' in k)}
         model.load_state_dict(state_dict, False)
         print('load pretrained model ' + opt.pretrained_model)
@@ -112,11 +112,11 @@ def train(**kwargs):
     reid_evaluator = ResNetEvaluator(model)
 
     if opt.evaluate:
-        reid_evaluator.evaluate(queryloader, galleryloader, 
-            queryFliploader, galleryFliploader, re_ranking=opt.re_ranking, savefig=opt.savefig)
+        reid_evaluator.evaluate(queryloader, galleryloader,
+                                queryFliploader, galleryFliploader, re_ranking=opt.re_ranking, savefig=opt.savefig)
         return
 
-    #xent_criterion = nn.CrossEntropyLoss()
+    # xent_criterion = nn.CrossEntropyLoss()
     xent_criterion = CrossEntropyLabelSmooth(dataset.num_train_pids)
 
     if opt.loss == 'triplet':
@@ -128,7 +128,7 @@ def train(**kwargs):
 
     def criterion(triplet_y, softmax_y, labels):
         losses = [embedding_criterion(output, labels)[0] for output in triplet_y] + \
-                     [xent_criterion(output, labels) for output in softmax_y]
+                 [xent_criterion(output, labels) for output in softmax_y]
         loss = sum(losses)
         return loss
 
@@ -138,14 +138,13 @@ def train(**kwargs):
     else:
         optimizer = torch.optim.Adam(optim_policy, lr=opt.lr, weight_decay=opt.weight_decay)
 
-
     start_epoch = opt.start_epoch
     # get trainer and evaluator
     reid_trainer = cls_tripletTrainer(opt, model, optimizer, criterion, summary_writer)
 
     def adjust_lr(optimizer, ep):
         if ep < 50:
-            lr = 1e-4*(ep//5+1)
+            lr = 1e-4 * (ep // 5 + 1)
         elif ep < 200:
             lr = 1e-3
         elif ep < 300:
@@ -166,7 +165,7 @@ def train(**kwargs):
         # skip if not save model
         if opt.eval_step > 0 and (epoch + 1) % opt.eval_step == 0 or (epoch + 1) == opt.max_epoch:
             if opt.mode == 'class':
-                rank1 = test(model, queryloader) 
+                rank1 = test(model, queryloader)
             else:
                 rank1 = reid_evaluator.evaluate(queryloader, galleryloader, queryFliploader, galleryFliploader)
             is_best = rank1 > best_rank1
@@ -178,26 +177,29 @@ def train(**kwargs):
                 state_dict = model.module.state_dict()
             else:
                 state_dict = model.state_dict()
-            save_checkpoint({'state_dict': state_dict, 'epoch': epoch + 1}, 
-                is_best=is_best, save_dir=opt.save_dir, 
-                filename='checkpoint_ep' + str(epoch + 1) + '.pth.tar')
+            save_checkpoint({'state_dict': state_dict, 'epoch': epoch + 1},
+                            is_best=is_best, save_dir=opt.save_dir,
+                            filename='checkpoint_ep' + str(epoch + 1) + '.pth.tar')
 
     print('Best rank-1 {:.1%}, achived at epoch {}'.format(best_rank1, best_epoch))
+
 
 def test(model, queryloader):
     model.eval()
     correct = 0
     with torch.no_grad():
         for data, target, _ in queryloader:
-            output = model(data).cpu() 
+            output = model(data).cpu()
             # get the index of the max log-probability
             pred = output.max(1, keepdim=True)[1]
             correct += pred.eq(target.view_as(pred)).sum().item()
 
     rank1 = 100. * correct / len(queryloader.dataset)
     print('\nTest set: Accuracy: {}/{} ({:.2f}%)\n'.format(correct, len(queryloader.dataset), rank1))
-    return rank1 
+    return rank1
+
 
 if __name__ == '__main__':
     import fire
+
     fire.Fire()

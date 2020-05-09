@@ -14,7 +14,7 @@ class DefaultConfig(object):
     loss = 'triplet'
     optim = 'adam'
     max_epoch = 60
-    train_batch = 32 
+    train_batch = 32
     test_batch = 32
     adjust_lr = False
     lr = 0.0001
@@ -27,14 +27,14 @@ class DefaultConfig(object):
     num_instances = 4
     num_gpu = 1
     evaluate = False
-    savefig = None 
+    savefig = None
     re_ranking = False
 
     # model options
     model_name = 'bfe'  # triplet, softmax_triplet, bfe, ide
     last_stride = 1
     pretrained_model = None
-    
+
     # miscs
     print_freq = 30
     eval_step = 50
@@ -49,7 +49,7 @@ class DefaultConfig(object):
                 warnings.warn("Warning: opt has not attribut %s" % k)
             setattr(self, k, v)
             if 'cls' in self.dataset:
-                self.mode='class'
+                self.mode = 'class'
             if 'market' in self.dataset or 'cuhk' in self.dataset or 'duke' in self.dataset:
                 self.datatype = 'person'
             elif 'cub' in self.dataset:
@@ -64,5 +64,6 @@ class DefaultConfig(object):
     def _state_dict(self):
         return {k: getattr(self, k) for k, _ in DefaultConfig.__dict__.items()
                 if not k.startswith('_')}
+
 
 opt = DefaultConfig()

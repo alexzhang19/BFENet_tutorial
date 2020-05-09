@@ -19,6 +19,7 @@ class Market1501(object):
     # identities: 1501 (+1 for background)
     # images: 12936 (train) + 3368 (query) + 15913 (gallery)
     """
+
     def __init__(self, dataset_dir, mode, root='data'):
         self.dataset_dir = dataset_dir
         self.dataset_dir = osp.join(root, self.dataset_dir)
@@ -68,7 +69,7 @@ class Market1501(object):
     def _process_dir(self, dir_path, relabel=False):
         img_names = os.listdir(dir_path)
         img_paths = [os.path.join(dir_path, img_name) for img_name in img_names \
-            if img_name.endswith('jpg') or img_name.endswith('png')]
+                     if img_name.endswith('jpg') or img_name.endswith('png')]
         pattern = re.compile(r'([-\d]+)_c([-\d]+)')
 
         pid_container = set()
@@ -83,8 +84,8 @@ class Market1501(object):
             pid, camid = map(int, pattern.search(img_path).groups())
             if pid == -1:
                 continue  # junk images are just ignored
-            #assert 0 <= pid <= 1501  # pid == 0 means background
-            #assert 1 <= camid <= 6
+            # assert 0 <= pid <= 1501  # pid == 0 means background
+            # assert 1 <= camid <= 6
             camid -= 1  # index starts from 0
             if relabel: pid = pid2label[pid]
             dataset.append((img_path, pid, camid))
@@ -92,6 +93,7 @@ class Market1501(object):
         num_pids = len(pid_container)
         num_imgs = len(dataset)
         return dataset, num_pids, num_imgs
+
 
 def init_dataset(name, mode):
     return Market1501(name, mode)

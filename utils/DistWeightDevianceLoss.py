@@ -45,10 +45,10 @@ class DistWeightBinDevianceLoss(nn.Module):
         pos_sim = torch.masked_select(sim_mat, pos_mask)
         neg_sim = torch.masked_select(sim_mat, neg_mask)
 
-        num_instances = len(pos_sim)//n + 1
+        num_instances = len(pos_sim) // n + 1
         num_neg_instances = n - num_instances
 
-        pos_sim = pos_sim.resize(len(pos_sim)//(num_instances-1), num_instances-1)
+        pos_sim = pos_sim.resize(len(pos_sim) // (num_instances - 1), num_instances - 1)
         neg_sim = neg_sim.resize(
             len(neg_sim) // num_neg_instances, num_neg_instances)
 
@@ -62,7 +62,7 @@ class DistWeightBinDevianceLoss(nn.Module):
             neg_pair = torch.sort(neg_sim[i])[0]
 
             neg_mean, neg_std = GaussDistribution(neg_pair)
-            prob = torch.exp(torch.pow(neg_pair - neg_mean, 2) / (2*torch.pow(neg_std, 2)))
+            prob = torch.exp(torch.pow(neg_pair - neg_mean, 2) / (2 * torch.pow(neg_std, 2)))
             neg_index = torch.multinomial(prob, num_instances - 1, replacement=False)
 
             neg_pair = neg_pair[neg_index]
@@ -79,13 +79,13 @@ class DistWeightBinDevianceLoss(nn.Module):
                 print('neg_pair is ---------', neg_pair)
                 print('pos_pair is ---------', pos_pair.data)
 
-            pos_loss = torch.mean(torch.log(1 + torch.exp(-2*(pos_pair - self.margin))))
-            neg_loss = 0.04*torch.mean(torch.log(1 + torch.exp(50*(neg_pair - self.margin))))
+            pos_loss = torch.mean(torch.log(1 + torch.exp(-2 * (pos_pair - self.margin))))
+            neg_loss = 0.04 * torch.mean(torch.log(1 + torch.exp(50 * (neg_pair - self.margin))))
             loss.append(pos_loss + neg_loss)
-        loss = [torch.unsqueeze(l,0) for l in loss]
-        loss = torch.sum(torch.cat(loss))/n
+        loss = [torch.unsqueeze(l, 0) for l in loss]
+        loss = torch.sum(torch.cat(loss)) / n
 
-        prec = float(c)/n
+        prec = float(c) / n
         neg_d = torch.mean(neg_sim).item()
         pos_d = torch.mean(pos_sim).item()
 
@@ -102,7 +102,7 @@ def main():
     # print(x)
     w = Variable(torch.rand(input_dim, output_dim), requires_grad=True)
     inputs = x.mm(w)
-    y_ = 8*list(range(num_class))
+    y_ = 8 * list(range(num_class))
     targets = Variable(torch.IntTensor(y_))
 
     print(DistWeightBinDevianceLoss()(inputs, targets))
@@ -111,5 +111,3 @@ def main():
 if __name__ == '__main__':
     main()
     print('Congratulations to you!')
-
-
